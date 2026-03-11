@@ -162,6 +162,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  // 핀 목록
   Widget _buildSheetHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
@@ -345,6 +346,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
                 const SizedBox(width: 8),
+
                 // 출발 시간 강조 박스
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
