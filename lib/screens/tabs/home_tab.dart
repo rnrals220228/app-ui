@@ -1,5 +1,5 @@
 // ============================================================
-// lib/screens/tabs/home_tab.dart
+// lib/screens/tabs/home_tab.dart - 홈 탭
 // ============================================================
 import 'package:flutter/material.dart';
 import '../../utils/colors.dart';
@@ -170,10 +170,25 @@ class _HomeTabState extends State<HomeTab> {
       ),
       child: Column(
         children: [
-          Container(
-            width: 40, height: 4,
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+          GestureDetector(
+            onTap: () {
+              final current = _sheetController.size;
+              final targetSize = current >= 0.8 ? 0.45 : 0.95;
+              _sheetController.animateTo(
+                targetSize,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            behavior: HitTestBehavior.translucent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 60),
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
           ),
           Row(
             children: [
@@ -390,7 +405,7 @@ class _HomeTabState extends State<HomeTab> {
                         elevation: 0,
                       ),
                       onPressed: isFull ? null : () {},
-                      child: Text(isFull ? '❌ 마감된 팀입니다' : '✅ 참여하기',
+                      child: Text(isFull ? '마감된 팀입니다' : '참여하기',
                           style: const TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),

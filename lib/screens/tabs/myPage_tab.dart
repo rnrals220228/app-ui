@@ -80,7 +80,7 @@ class _MyPageTabState extends State<MyPageTab> {
           Wrap(spacing: 6, runSpacing: 6, children: [
             _tag('인증됨 ✓'),
             _tag('⭐ 4.8', color: AppColors.accent, bg: const Color(0xFFFFF8E6)),
-            _tag('탑승 12회', color: AppColors.success, bg: const Color(0xFFE8F5EF)),
+            _tag('탑승 12회'),
           ]),
           Container(
             margin: const EdgeInsets.only(top: 20),
@@ -152,6 +152,7 @@ class _MyPageTabState extends State<MyPageTab> {
           decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
           child: Text(t, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)));
 
+  // 로그아웃 클릭 시 팝업 창
   void _showLogoutDialog(BuildContext context) {
     showDialog(context: context, builder: (_) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

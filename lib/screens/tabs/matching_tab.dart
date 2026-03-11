@@ -149,6 +149,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+  // 최근 검색
   Widget _buildRecentSearches() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,6 +192,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+  // 검색 시 출력되는 핀 목록
   Widget _buildPinList() {
     final pins = _filteredPins;
     return Column(
@@ -213,6 +215,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+  //
   Widget _buildSearchCard(Map<String, dynamic> pin) {
     final isFull = (pin['cur'] as int) >= (pin['max'] as int);
     return Container(
@@ -299,7 +302,12 @@ class _MatchingTabState extends State<MatchingTab>
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  onPressed: isFull ? null : () {},
+                  onPressed: isFull ? null : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => RideJoinScreen(pin: pin),)
+                    );
+                  },
                   child: Text(isFull ? '마감' : '참여하기',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
@@ -311,7 +319,10 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+
+  // ============================================================
   // 핀 생성 탭
+  // ============================================================
   Widget _buildCreateTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -591,4 +602,313 @@ class _MatchingTabState extends State<MatchingTab>
         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
         child: Text(text, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700)),
       );
+}
+
+
+
+// ============================================================
+// 동승 참여 화면
+// ============================================================
+class RideJoinScreen extends StatefulWidget {
+  final Map<String, dynamic> pin;
+  const RideJoinScreen({super.key, required this.pin});
+
+  @override
+  State<RideJoinScreen> createState() => _RideJoinScreenState();
+}
+
+class _RideJoinScreenState extends State<RideJoinScreen> {
+  String? _selectedSeat;
+  final List<String> _takenSeats = ['조수석', '왼쪽 창가']; // 더미: 실제론 pin 데이터에서
+
+  @override
+  Widget build(BuildContext context) {
+    final pin = widget.pin;
+    final int cur = pin['cur'] as int;
+    final int max = pin['max'] as int;
+    final bool isFull = cur >= max;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.secondary, size: 18),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('동승 참여',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.secondary)),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: AppColors.border),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 대표자
+            _sectionTitle('👤 대표자'),
+            const SizedBox(height: 10),
+            _card(child: Row(
+              children: [
+                Container(
+                  width: 48, height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.bg, shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(Icons.person, color: AppColors.gray, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('@${pin['hostId']}',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.secondary)),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      _tag('인증됨 ✓'),
+                      const SizedBox(width: 4),
+                      _tag('⭐ 4.8', color: AppColors.accent, bg: const Color(0xFFFFF8E6)),
+                    ]),
+                  ],
+                ),
+              ],
+            )),
+            const SizedBox(height: 20),
+
+            // 경로
+            _sectionTitle('🗺️ 경로'),
+            const SizedBox(height: 10),
+            _card(child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: _routeRow(Icons.my_location, AppColors.primary, '출발지', '${pin['dept']}'),
+                  ),
+                ),
+                Column(children: List.generate(3, (_) =>
+                    Container(width: 2, height: 6, margin: const EdgeInsets.symmetric(vertical: 2), color: AppColors.border))),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: _routeRow(Icons.location_on, AppColors.red, '목적지', '${pin['dest']}'),
+                  ),
+                ),
+              ],
+            )),
+            const SizedBox(height: 20),
+
+            // 출발 시간 & 모집 인원
+            Row(
+              children: [
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('🕐 출발 시간'),
+                    const SizedBox(height: 10),
+                    _card(child: Row(children: [
+                      const Icon(Icons.access_time_rounded, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text('${pin['time']}',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.secondary)),
+                    ])),
+                  ],
+                )),
+                const SizedBox(width: 12),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle('👥 모집 인원'),
+                    const SizedBox(height: 10),
+                    _card(child: Row(children: [
+                      ...List.generate(max, (j) => Container(
+                        width: 20, height: 20, margin: const EdgeInsets.only(right: 3),
+                        decoration: BoxDecoration(
+                          color: j < cur ? AppColors.primary : AppColors.bg,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: j < cur ? AppColors.primary : AppColors.border),
+                        ),
+                        child: j < cur ? const Icon(Icons.person, color: Colors.white, size: 12) : null,
+                      )),
+                      const SizedBox(width: 6),
+                      Text('$cur/$max', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.secondary)),
+                    ])),
+                  ],
+                )),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // 좌석 선택
+            _sectionTitle('💺 좌석 선택'),
+            const SizedBox(height: 4),
+            const Text('빈 좌석을 선택해 주세요.', style: TextStyle(fontSize: 11, color: AppColors.gray)),
+            const SizedBox(height: 10),
+            _card(child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.bg, borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Row(children: [
+                        Icon(Icons.settings, size: 14, color: AppColors.gray),
+                        SizedBox(width: 4),
+                        Text('운전석', style: TextStyle(fontSize: 11, color: AppColors.gray)),
+                      ]),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Divider(color: AppColors.border, height: 1),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(child: Column(children: [
+                      _seatButton('조수석',    Icons.airline_seat_recline_extra),
+                      const SizedBox(height: 10),
+                      _seatButton('왼쪽 창가', Icons.airline_seat_recline_normal),
+                    ])),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(children: [
+                      _seatButton('가운데',      Icons.airline_seat_legroom_normal),
+                      const SizedBox(height: 10),
+                      _seatButton('오른쪽 창가', Icons.airline_seat_recline_normal),
+                    ])),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _legend(AppColors.primaryLight, AppColors.primary, '선택됨'),
+                    const SizedBox(width: 16),
+                    _legend(AppColors.bg, AppColors.border, '비어있음'),
+                    const SizedBox(width: 16),
+                    _legend(const Color(0xFFF5F5F5), AppColors.gray, '사용 중'),
+                  ],
+                ),
+              ],
+            )),
+            const SizedBox(height: 32),
+
+            // 참여하기 버튼
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: (isFull || _selectedSeat == null) ? AppColors.gray : AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                onPressed: (isFull || _selectedSeat == null) ? null : _handleJoin,
+                child: Text(
+                  isFull ? '마감된 팀입니다'
+                      : _selectedSeat == null ? '좌석을 선택해 주세요'
+                      : '참여하기',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _seatButton(String label, IconData icon) {
+    final isTaken = _takenSeats.contains(label);
+    final isSelected = _selectedSeat == label;
+    final Color bg = isTaken ? const Color(0xFFF5F5F5) : isSelected ? AppColors.primaryLight : AppColors.bg;
+    final Color border = isTaken ? AppColors.gray : isSelected ? AppColors.primary : AppColors.border;
+    final Color textColor = isTaken ? AppColors.gray : isSelected ? AppColors.primary : AppColors.secondary;
+
+    return GestureDetector(
+      onTap: isTaken ? null : () => setState(() => _selectedSeat = isSelected ? null : label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border.all(color: border, width: isSelected ? 1.5 : 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(children: [
+          Icon(icon, size: 22, color: isTaken ? AppColors.gray : isSelected ? AppColors.primary : AppColors.secondary),
+          const SizedBox(height: 6),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textColor), textAlign: TextAlign.center),
+          const SizedBox(height: 4),
+          Text(isTaken ? '사용 중' : '비어있음', style: TextStyle(fontSize: 10, color: isTaken ? AppColors.gray : AppColors.primary)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _card({required Widget child}) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white, border: Border.all(color: AppColors.border),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: child,
+  );
+
+  Widget _routeRow(IconData icon, Color color, String label, String value) => Row(children: [
+    Icon(icon, color: color, size: 22),
+    const SizedBox(width: 12),
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(label, style: const TextStyle(fontSize: 10, color: AppColors.gray)),
+      Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+    ]),
+  ]);
+
+  Widget _sectionTitle(String text) =>
+      Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.secondary));
+
+  Widget _tag(String text, {Color color = AppColors.primary, Color bg = AppColors.primaryLight}) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
+        child: Text(text, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700)),
+      );
+
+  Widget _legend(Color bg, Color border, String label) => Row(children: [
+    Container(width: 14, height: 14,
+        decoration: BoxDecoration(color: bg, border: Border.all(color: border), borderRadius: BorderRadius.circular(4))),
+    const SizedBox(width: 4),
+    Text(label, style: const TextStyle(fontSize: 10, color: AppColors.gray)),
+  ]);
+
+  void _handleJoin() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('참여 완료! 🎉',
+            style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.secondary)),
+        content: Text('@${widget.pin['hostId']} 팀에 참여했습니다.\n좌석: $_selectedSeat',
+            style: const TextStyle(fontSize: 13, color: AppColors.gray)),
+        actions: [
+          TextButton(
+            onPressed: () { Navigator.pop(context); Navigator.pop(context); },
+            child: const Text('확인', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
 }
