@@ -29,6 +29,7 @@ class TripParticipantAdmin(admin.ModelAdmin):
         "user",
         "role",
         "status",
+        "seat_position",
         "confirmed_departure",
         "joined_at",
         "left_at",

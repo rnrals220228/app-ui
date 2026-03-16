@@ -85,6 +85,13 @@ class TripParticipant(models.Model):
         ("LEFT", "LEFT"),
         ("KICKED", "KICKED"),
     ]
+    
+    SEAT_POSITION_CHOICES = [
+        ("FRONT_PASSENGER", "FRONT_PASSENGER"),
+        ("REAR_LEFT", "REAR_LEFT"), 
+        ("REAR_RIGHT", "REAR_RIGHT"),   
+        ("REAR_MIDDLE", "REAR_MIDDLE"),
+    ]
 
     trip = models.ForeignKey(
         Trip,
@@ -98,6 +105,7 @@ class TripParticipant(models.Model):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="MEMBER")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="JOINED")
+    seat_position = models.CharField(max_length=20, choices=SEAT_POSITION_CHOICES,)
     confirmed_departure = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
     left_at = models.DateTimeField(blank=True, null=True)
@@ -107,7 +115,11 @@ class TripParticipant(models.Model):
             models.UniqueConstraint(
                 fields=["trip", "user"],
                 name="unique_trip_participant",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["trip", "seat_position"],
+                name="unique_trip_seat_position",
+            ),
         ]
 
     def __str__(self):
