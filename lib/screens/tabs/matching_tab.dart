@@ -69,6 +69,7 @@ class _MatchingTabState extends State<MatchingTab>
     ).toList();
   }
 
+  // 매칭 탭 기본 화면 구조 위젯 트리
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,7 +90,9 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
-  // 헤더
+  // ============================================================
+  // 헤더 (title, 핀 검색/생성 탭바)
+  // ============================================================
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -120,7 +123,9 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
-  // 검색 탭
+  // ============================================================
+  // 검색 탭 화면 위젯
+  // ============================================================
   Widget _buildSearchTab() {
     return GestureDetector(
       onTap: () { FocusScope.of(context).unfocus(); setState(() => _searchFocused = false); },
@@ -158,7 +163,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
-  // 최근 검색
+  // 최근 검색 위젯
   Widget _buildRecentSearches() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +229,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
-  //
+  // 핀 목록 카드 위젯
   Widget _buildSearchCard(Map<String, dynamic> pin) {
     final isFull = (pin['cur'] as int) >= (pin['max'] as int);
     return Container(
@@ -237,9 +242,9 @@ class _MatchingTabState extends State<MatchingTab>
       ),
       child: Column(
         children: [
-          Row(
+          Row( // 상단 행 : 프로필, 대표자 정보, 출발 시간, 경로
             children: [
-              Container(
+              Container( // 프로필 원형 아이콘
                 width: 44, height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.bg, shape: BoxShape.circle,
@@ -248,14 +253,14 @@ class _MatchingTabState extends State<MatchingTab>
                 child: const Icon(Icons.person, color: AppColors.gray, size: 26),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              Expanded( // 대표자 아이디, 경로 정보
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('@${pin['hostId']}',
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
                     const SizedBox(height: 6),
-                    Row(
+                    Row( // 경로 표시 (출발지->목적지)
                       children: [
                         Flexible(child: Text('${pin['dept']}',
                             style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
@@ -273,7 +278,7 @@ class _MatchingTabState extends State<MatchingTab>
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
+              Container( // 출발 시간 뱃지
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
                 child: Column(
@@ -287,8 +292,9 @@ class _MatchingTabState extends State<MatchingTab>
             ],
           ),
           const SizedBox(height: 12),
-          Row(
+          Row( // 하단 행 : 인원 현황, 참여 버튼
             children: [
+              // 인원 현황
               ...List.generate(pin['max'] as int, (j) => Container(
                 width: 22, height: 22, margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
@@ -301,7 +307,7 @@ class _MatchingTabState extends State<MatchingTab>
               const SizedBox(width: 6),
               Text('${pin['cur']}/${pin['max']}명', style: const TextStyle(fontSize: 11, color: AppColors.gray)),
               const Spacer(),
-              SizedBox(
+              SizedBox( // 참여하기 버튼 (마감된 핀은 마감 표시)
                 height: 34,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -338,6 +344,7 @@ class _MatchingTabState extends State<MatchingTab>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 핀 생성 성공 배너 (핀 생성 성공 시 출력)
           if (_pinCreated)
             Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -357,6 +364,7 @@ class _MatchingTabState extends State<MatchingTab>
               ),
             ),
 
+          // 현재 대표자 프로필 카드 (프로필, 인증 여부, 평가 점수)
           Container(
             padding: const EdgeInsets.all(14),
             margin: const EdgeInsets.only(bottom: 16),
@@ -367,7 +375,7 @@ class _MatchingTabState extends State<MatchingTab>
             ),
             child: Row(
               children: [
-                Container(
+                Container( // 원형 프로필 아이콘
                   width: 44, height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white, shape: BoxShape.circle,
@@ -379,10 +387,10 @@ class _MatchingTabState extends State<MatchingTab>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('@my_username',
+                    const Text('@my_username', // 실제 서비스에서는 로그인된 유저 정보로 대체
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Row(children: [
+                    Row(children: [ // 인증 뱃지, 평가 점수 뱃지
                       _tag('인증됨 ✓'),
                       const SizedBox(width: 4),
                       _tag('⭐ 4.8', color: AppColors.accent, bg: const Color(0xFFFFF8E6)),
@@ -393,15 +401,17 @@ class _MatchingTabState extends State<MatchingTab>
             ),
           ),
 
+          // 출발지 입력
           _label('📍 출발지'), const SizedBox(height: 6),
           _textField(_deptCtrl, '예: 강남역 2번 출구'),
           const SizedBox(height: 14),
 
+          // 목적지 입력
           _label('🏁 목적지'), const SizedBox(height: 6),
           _textField(_destCtrl, '예: 김포공항 국내선'),
           const SizedBox(height: 14),
 
-          // 출발 시간 피커
+          // 출발 시간 선택
           _label('🕐 출발 시간'), const SizedBox(height: 6),
           GestureDetector(
             onTap: _showTimePicker,
@@ -426,8 +436,8 @@ class _MatchingTabState extends State<MatchingTab>
           ),
           const SizedBox(height: 14),
 
-          // 모집 인원
-          _label('👥 모집 인원 (최대 4명)'), const SizedBox(height: 8),
+          // 모집 인원 선택
+          _label('👥 모집 인원 (최대 4명, 본인 포함 기준)'), const SizedBox(height: 8),
           Row(
             children: [2, 3, 4].map((n) => Expanded(
               child: Padding(
@@ -491,6 +501,7 @@ class _MatchingTabState extends State<MatchingTab>
           ),
           const SizedBox(height: 16),
 
+          // 카카오페이 링크 입력 (필수로 하기?)
           _label('💛 카카오페이 링크 (선택)'), const SizedBox(height: 6),
           TextField(
             controller: _kakaoCtrl,
@@ -505,6 +516,7 @@ class _MatchingTabState extends State<MatchingTab>
           ),
           const SizedBox(height: 24),
 
+          // 핀 생성 버튼
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -524,6 +536,7 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+  // 시간 선택 바텀 시트 표시 메서드 (출발 시간 선택 시 실행)
   void _showTimePicker() {
     showModalBottomSheet(
       context: context,
@@ -545,14 +558,14 @@ class _MatchingTabState extends State<MatchingTab>
                 height: 200,
                 child: CupertinoDatePicker(
                   mode: CupertinoDatePickerMode.time,
-                  use24hFormat: false,
+                  use24hFormat: false, // 12시간 형식(AM/PM)
                   initialDateTime: DateTime(2024, 1, 1, _selectedTime.hour, _selectedTime.minute),
                   onDateTimeChanged: (dt) {
                     setModalState(() => tempTime = TimeOfDay(hour: dt.hour, minute: dt.minute));
                   },
                 ),
               ),
-              Padding(
+              Padding( // 확인 버튼
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                 child: SizedBox(
                   width: double.infinity,
@@ -575,7 +588,9 @@ class _MatchingTabState extends State<MatchingTab>
     );
   }
 
+  // 유효성 검사 및 처리 로직 메서드 (핀 생성 버튼 시 실행)
   void _handleCreate() {
+    // 필수 입력값 검사 (출발지, 목적지)
     if (_deptCtrl.text.isEmpty || _destCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('출발지와 목적지를 입력해주세요.'),
@@ -583,16 +598,21 @@ class _MatchingTabState extends State<MatchingTab>
       ));
       return;
     }
-    setState(() => _pinCreated = true);
+    setState(() => _pinCreated = true); // 성공 배너 표시
+
+    // 폼 입력값 초기화 (생성한 핀 제출 후 비우기)
     _deptCtrl.clear(); _destCtrl.clear(); _kakaoCtrl.clear();
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _pinCreated = false);
     });
   }
 
+  // 헬퍼 위젯 (재사용 위젯)
+  // 제목 텍스트 표준 스타일
   Widget _label(String text) =>
       Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.secondary));
 
+  // 출발지/목적지 입력 필드 공통 스타일
   Widget _textField(TextEditingController ctrl, String hint) => TextField(
     controller: ctrl,
     decoration: InputDecoration(
@@ -605,6 +625,7 @@ class _MatchingTabState extends State<MatchingTab>
     ),
   );
 
+  // 뱃지 스타일
   Widget _tag(String text, {Color color = AppColors.primary, Color bg = AppColors.primaryLight}) =>
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -616,7 +637,7 @@ class _MatchingTabState extends State<MatchingTab>
 
 
 // ============================================================
-// 동승 참여 화면
+// 동승 참여 화면 - 참여 버튼 클릭 시 실행
 // ============================================================
 class RideJoinScreen extends StatefulWidget {
   final Map<String, dynamic> pin;
@@ -626,10 +647,12 @@ class RideJoinScreen extends StatefulWidget {
   State<RideJoinScreen> createState() => _RideJoinScreenState();
 }
 
+// 참여 화면 상태 관리 및 UI 렌더링
 class _RideJoinScreenState extends State<RideJoinScreen> {
   String? _selectedSeat;
   final List<String> _takenSeats = ['조수석', '왼쪽 창가']; // 더미: 실제론 pin 데이터에서
 
+  // 참여 화면 전체 UI 렌더링
   @override
   Widget build(BuildContext context) {
     final pin = widget.pin;
@@ -639,27 +662,32 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // 앱 바 (참여 화면 상단 헤더)
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
+        leading: IconButton( // 뒤로가기
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.secondary, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('동승 참여',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.secondary)),
         centerTitle: true,
-        bottom: PreferredSize(
+        bottom: PreferredSize(  // 하단 구분선
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: AppColors.border),
         ),
       ),
+
+      // 참여 화면 바디
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 대표자
+
+            // 대표자 정보 섹션
             _sectionTitle('👤 대표자'),
             const SizedBox(height: 10),
             _card(child: Row(
@@ -673,7 +701,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
                   child: const Icon(Icons.person, color: AppColors.gray, size: 28),
                 ),
                 const SizedBox(width: 14),
-                Column(
+                Column( // 대표자 아이디, 뱃지
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('@${pin['hostId']}',
@@ -690,7 +718,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
             )),
             const SizedBox(height: 20),
 
-            // 경로
+            // 경로 섹션
             _sectionTitle('🗺️ 경로'),
             const SizedBox(height: 10),
             _card(child: Row(
@@ -713,9 +741,9 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
             )),
             const SizedBox(height: 20),
 
-            // 출발 시간 & 모집 인원
+            // 출발 시간 & 모집 인원 섹션
             Row(
-              children: [
+              children: [// 출발 시간
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -730,7 +758,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
                   ],
                 )),
                 const SizedBox(width: 12),
-                Expanded(child: Column(
+                Expanded(child: Column( // 모집 인원
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _sectionTitle('👥 모집 인원'),
@@ -754,7 +782,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 좌석 선택
+            // 좌석 선택 섹션
             _sectionTitle('💺 좌석 선택'),
             const SizedBox(height: 4),
             const Text('빈 좌석을 선택해 주세요.', style: TextStyle(fontSize: 11, color: AppColors.gray)),
@@ -838,6 +866,9 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
     );
   }
 
+  //------------------------------------------------------------------------
+
+  // 좌석 선택 버튼 위젯
   Widget _seatButton(String label, IconData icon) {
     final isTaken = _takenSeats.contains(label);
     final isSelected = _selectedSeat == label;
@@ -866,6 +897,8 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
     );
   }
 
+  // 헬퍼 위젯
+  // 섹션 카드 공통 스타일
   Widget _card({required Widget child}) => Container(
     width: double.infinity,
     padding: const EdgeInsets.all(16),
@@ -876,6 +909,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
     child: child,
   );
 
+  // 경로 섹션 스타일
   Widget _routeRow(IconData icon, Color color, String label, String value) => Row(children: [
     Icon(icon, color: color, size: 22),
     const SizedBox(width: 12),
@@ -885,9 +919,11 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
     ]),
   ]);
 
+  // 각 섹션 tilte 스타일
   Widget _sectionTitle(String text) =>
       Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.secondary));
 
+  // 뱃지 형태 라벨 위젯 스타일
   Widget _tag(String text, {Color color = AppColors.primary, Color bg = AppColors.primaryLight}) =>
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -895,6 +931,7 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
         child: Text(text, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700)),
       );
 
+  // 좌석 상태 스타일
   Widget _legend(Color bg, Color border, String label) => Row(children: [
     Container(width: 14, height: 14,
         decoration: BoxDecoration(color: bg, border: Border.all(color: border), borderRadius: BorderRadius.circular(4))),
@@ -902,6 +939,9 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
     Text(label, style: const TextStyle(fontSize: 10, color: AppColors.gray)),
   ]);
 
+  //---------------------------------------------------------------------------------------
+
+  // 참여 완료 다이얼로그 표시 메서드 (참여하기 버튼 클릭 시 실행)
   void _handleJoin() {
     showDialog(
       context: context,

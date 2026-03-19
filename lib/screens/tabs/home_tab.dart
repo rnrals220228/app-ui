@@ -13,14 +13,16 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/colors.dart';
 
+// 탭 전환 신호 역할 (인덱스 전달)
 typedef OnTabChange = void Function(int index);
 
-// ── 핀 데이터 모델 ─────────────────────────────────────────
+// 핀 데이터 모델
 class RidePin {
-  final String id, hostId, dept, dest, time;
-  final int max, cur;
+  final String id, hostId, dept, dest, time;  // 핀 ID, 대표자 ID, 출발지, 목적지, 출발 시각
+  final int max, cur; // 최대 모집 인원, 현재 참여 인원
   final double lat, lng; // 실제 좌표
 
+  // 더미 데이터 연결 용 상수 객체
   const RidePin({
     required this.id, required this.hostId,
     required this.dept, required this.dest, required this.time,
@@ -28,7 +30,7 @@ class RidePin {
     required this.lat, required this.lng,
   });
 
-  bool get isFull => cur >= max;
+  bool get isFull => cur >= max; // 최대 인원 모집 완료 시 마감 상태로 전환
 
   // 현재 지도 중심과의 거리 계산 (카메라 이동 시 필터링용)
   double distanceTo(double centerLat, double centerLng) {
@@ -36,7 +38,7 @@ class RidePin {
   }
 }
 
-// ── 더미 핀 데이터 (실제 서비스에서는 서버 API로 교체) ──────
+// 더미 핀 데이터 (실제 서비스에서는 서버 API로 교체)
 const List<RidePin> _allPins = [
   RidePin(id:'1', hostId:'taxi_kim',  dept:'강남역 2번출구', dest:'김포공항',    time:'14:30', max:4, cur:2, lat:37.4979, lng:127.0276),
   RidePin(id:'2', hostId:'seoul_lee', dept:'홍대입구역',    dest:'인천공항 T1', time:'15:00', max:3, cur:1, lat:37.5574, lng:126.9249),
@@ -47,19 +49,22 @@ const List<RidePin> _allPins = [
 ];
 
 // ============================================================
+
+// 홈 탭 상태 변화 관리 클래스 (탭 전환 시)
 class HomeTab extends StatefulWidget {
   final OnTabChange? onTabChange;
-  const HomeTab({super.key, this.onTabChange});
+  final VoidCallback? onGoToCreate; // +버튼 용 콜백
+  const HomeTab({super.key, this.onTabChange, this.onGoToCreate});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeTabState extends State<HomeTab> {
-  // ── 지도 컨트롤러 ──
+  // 지도 컨트롤러
   NaverMapController? _mapController;
 
-  // ── 상태 ──
+  // 상태
   Position? _currentPosition;       // 현재 GPS 위치
   bool _locationLoading = true;      // GPS 로딩 중
   String? _activePinId;              // 클릭된 핀 ID
@@ -68,9 +73,11 @@ class _HomeTabState extends State<HomeTab> {
   List<RidePin> _visiblePins = [];   // 현재 지도 영역의 핀 목록
   double _mapCenterLat = 37.5665;    // 지도 중심 위도 (기본: 서울시청)
   double _mapCenterLng = 126.9780;   // 지도 중심 경도
+  bool _showSearch = false;          // 검색창 오버레이 표시 여부
+  String _searchQuery = '';          // 검색어
 
-  final DraggableScrollableController _sheetController =
-  DraggableScrollableController();
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
+  final TextEditingController _searchCtrl = TextEditingController();
 
   static const _dummyNotifications = [
     {'icon':'🚖','msg':'taxi_kim님이 동승 요청을 수락했습니다.',     'time':'방금 전'},
@@ -79,6 +86,7 @@ class _HomeTabState extends State<HomeTab> {
     {'icon':'✅','msg':'이용 내역이 정산되었습니다.',                 'time':'1시간 전'},
   ];
 
+  // 생명주기 관리
   @override
   void initState() {
     super.initState();
@@ -88,6 +96,7 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _sheetController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -240,6 +249,7 @@ class _HomeTabState extends State<HomeTab> {
               Expanded(child: _buildMapWithSheet()),
             ]),
             if (_showNotifications) _buildNotificationOverlay(),
+            if (_showSearch) _buildSearchOverlay(),
           ],
         ),
       ),
@@ -254,36 +264,75 @@ class _HomeTabState extends State<HomeTab> {
         color: Colors.white,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
-      child: Row(children: [
-        RichText(text: const TextSpan(
-          style: TextStyle(fontSize: 26, letterSpacing: 2, fontWeight: FontWeight.w900),
-          children: [
-            TextSpan(text: 'TAXI', style: TextStyle(color: AppColors.secondary)),
-            TextSpan(text: 'MATE', style: TextStyle(color: AppColors.primary)),
-          ],
-        )),
-        const Spacer(),
-        Stack(children: [
-          IconButton(
-            icon: Icon(
-              _showNotifications ? Icons.notifications : Icons.notifications_outlined,
-              color: _showNotifications ? AppColors.primary : AppColors.secondary,
+      child: Column(
+        children: [
+          Row(children: [  // 로고, 알림, 프로필
+            RichText(text: const TextSpan(
+              style: TextStyle(fontSize: 26, letterSpacing: 2, fontWeight: FontWeight.w900),
+              children: [
+                TextSpan(text: 'TAXI', style: TextStyle(color: AppColors.secondary)),
+                TextSpan(text: 'MATE', style: TextStyle(color: AppColors.primary)),
+              ],
+            )),
+            const Spacer(),
+            Stack(children: [
+              IconButton(
+                icon: Icon(
+                  _showNotifications ? Icons.notifications : Icons.notifications_outlined,
+                  color: _showNotifications ? AppColors.primary : AppColors.secondary,
+                ),
+                onPressed: () => setState(() => _showNotifications = !_showNotifications),
+              ),
+              Positioned(top: 8, right: 8,
+                  child: Container(width: 8, height: 8,
+                      decoration: const BoxDecoration(color: AppColors.red, shape: BoxShape.circle))),
+            ]),
+            GestureDetector(
+              onTap: () => widget.onTabChange?.call(4),
+              child: Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(color: AppColors.bg, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
+                child: const Icon(Icons.person, color: AppColors.gray, size: 22),
+              ),
             ),
-            onPressed: () => setState(() => _showNotifications = !_showNotifications),
-          ),
-          Positioned(top: 8, right: 8,
-              child: Container(width: 8, height: 8,
-                  decoration: const BoxDecoration(color: AppColors.red, shape: BoxShape.circle))),
-        ]),
-        GestureDetector(
-          onTap: () => widget.onTabChange?.call(3),
-          child: Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(color: AppColors.bg, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-            child: const Icon(Icons.person, color: AppColors.gray, size: 22),
-          ),
-        ),
-      ]),
+          ]),
+          const SizedBox(height: 10,),  // 여백
+          Row(children: [ // 검색창 + 버튼 행 추가
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _showSearch = true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.bg,
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.search, color: AppColors.gray, size: 18),
+                    const SizedBox(width: 8),
+                    const Text('출발지 또는 목적지 검색...',
+                        style: TextStyle(fontSize: 13, color: AppColors.gray)),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => widget.onGoToCreate?.call(),
+              child: Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 24),
+              ),
+            ),
+          ]),
+
+        ],
+      ),
     );
   }
 
@@ -415,7 +464,7 @@ class _HomeTabState extends State<HomeTab> {
         _mapController = controller;
 
         // 내 위치 마커 레이어 활성화
-        controller.setLocationTrackingMode(NLocationTrackingMode.noFollow);
+        // controller.setLocationTrackingMode(NLocationTrackingMode.noFollow);
 
         // GPS 위치가 이미 로딩됐다면 해당 위치로 이동
         if (_currentPosition != null) {
@@ -718,4 +767,128 @@ class _HomeTabState extends State<HomeTab> {
       ),
     );
   }
+
+  // 검색창 오버레이
+  Widget _buildSearchOverlay() {
+    final filtered = _searchQuery.isEmpty
+        ? _allPins
+        : _allPins.where((p) =>
+    p.dept.contains(_searchQuery) || p.dest.contains(_searchQuery)).toList();
+
+    return Positioned.fill(
+      child: GestureDetector(
+        onTap: () {
+          setState(() { _showSearch = false; _searchQuery = ''; _searchCtrl.clear(); });
+        },
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+          child: Column(children: [
+            // 검색창
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    autofocus: true,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: '출발지 또는 목적지 검색...',
+                      hintStyle: const TextStyle(fontSize: 13, color: AppColors.gray),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.gray),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                          icon: const Icon(Icons.clear, color: AppColors.gray),
+                          onPressed: () => setState(() { _searchQuery = ''; _searchCtrl.clear(); }))
+                          : null,
+                      filled: true, fillColor: AppColors.bg,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                TextButton(
+                  onPressed: () {
+                    setState(() { _showSearch = false; _searchQuery = ''; _searchCtrl.clear(); });
+                  },
+                  child: const Text('취소', style: TextStyle(color: AppColors.gray)),
+                ),
+              ]),
+            ),
+            // 핀 목록
+            Expanded(
+              child: GestureDetector(
+                onTap: () {}, // 목록 영역 탭 시 닫히지 않도록
+                child: Container(
+                  color: Colors.white,
+                  child: filtered.isEmpty
+                      ? const Center(
+                      child: Text('검색 결과가 없습니다.', style: TextStyle(color: AppColors.gray)))
+                      : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) => _buildSearchResultCard(filtered[i]),
+                  ),
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // 검색 결과 핀 목록 카드 위젯
+  Widget _buildSearchResultCard(RidePin pin) {
+    return GestureDetector(
+      onTap: () {
+        setState(() { _showSearch = false; _searchQuery = ''; _searchCtrl.clear(); _activePinId = pin.id; });
+        _mapController?.updateCamera(
+          NCameraUpdate.scrollAndZoomTo(target: NLatLng(pin.lat, pin.lng), zoom: 16),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: AppColors.bg, shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
+            child: const Icon(Icons.person, color: AppColors.gray, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('@${pin.hostId}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+              const SizedBox(height: 4),
+              Row(children: [
+                Flexible(child: Text(pin.dept, style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text('→', style: TextStyle(color: AppColors.textSub))),
+                Flexible(child: Text(pin.dest, style: const TextStyle(fontSize: 12, color: AppColors.secondary), overflow: TextOverflow.ellipsis)),
+              ]),
+            ],
+          )),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
+            child: Text(pin.time, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+          ),
+        ]),
+      ),
+    );
+  }
+
+
+
+
 }

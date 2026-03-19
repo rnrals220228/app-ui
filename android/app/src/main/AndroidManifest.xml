@@ -5,18 +5,20 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- 링크 연결용 -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- 프로필 등록용 카메라 권한 -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:label="TaxiMate"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
 
         <!-- 네이버 지도 Client ID -->
-        <meta-data
+        <!--meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
-            android:value="f61sxzdmej"/>
+            android:value="95qc7sfzkj"/ -->
 
         <activity
             android:name=".MainActivity"

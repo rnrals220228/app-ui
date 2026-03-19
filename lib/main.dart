@@ -21,14 +21,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 네이버 지도 SDK 초기화 (웹에서는 제외)
-  if (!kIsWeb) {
-    await NaverMapSdk.instance.initialize(
-      clientId: 'f61sxzdmej',
-      onAuthFailed: (error) {
-        debugPrint('네이버 지도 인증 실패: $error');
-      },
-    );
-  }
+  await NaverMapSdk.instance.initialize(
+    clientId: '95qc7sfzkj',
+    onAuthFailed: (error) {
+      debugPrint('인증 실패: $error');
+    },
+  );
 
   runApp(const TaxiMateApp());
 }
@@ -90,7 +88,13 @@ class _MainScreenState extends State<MainScreen> {
 
   // 각 탭 화면 리스트
   List<Widget> get _screens => [
-    HomeTab(onTabChange: (i) => setState(() => _selectedIndex = i)),
+    HomeTab(
+      onTabChange: (i) => setState(() => _selectedIndex = i),
+      onGoToCreate: () => setState(() {
+        _selectedIndex = 1; // 매칭 탭 인덱스
+        // 매칭 탭의 핀 생성 탭(인덱스 1)으로 바로 이동하려면 아래처럼
+      }),
+    ),
     const MatchingTab(),
     const ActiveTab(),
     const MessageTab(),
