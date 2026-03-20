@@ -7,12 +7,20 @@ from trips.models import Trip
 
 
 class PaymentChannel(models.Model):
+    PROVIDER_CHOICES = [
+        ("KAKAOPAY", "KAKAOPAY"),
+        ("TOSS", "TOSS"),
+        ("BANK", "BANK"),
+    ]
+
     trip = models.OneToOneField(
         Trip,
         on_delete=models.CASCADE,
         related_name="payment_channel",
     )
-    kakaopay_link = models.TextField(blank=True, null=True)
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
+    payment_link = models.TextField()
+    account_holder_name = models.CharField(max_length=50, blank=True, null=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -21,7 +29,7 @@ class PaymentChannel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"PaymentChannel for Trip {self.trip_id}"
+        return f"{self.provider} channel for Trip {self.trip_id}"
 
 
 class Receipt(models.Model):
@@ -41,11 +49,11 @@ class Receipt(models.Model):
         related_name="receipts_uploaded",
     )
     image_url = models.TextField()
-    total_amount = models.IntegerField(validators=[MinValueValidator(0)])
+    total_amount = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
     confirmed_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         constraints = [
             models.CheckConstraint(
@@ -68,11 +76,11 @@ class Settlement(models.Model):
         ("CANCELED", "CANCELED"),
     ]
 
-    trip = models.ForeignKey(
-        Trip,
-        on_delete=models.CASCADE,
-        related_name="settlements",
-    )
+    VERIFICATION_METHOD_CHOICES = [
+        ("MANUAL", "MANUAL"),
+        ("PROOF_IMAGE", "PROOF_IMAGE"),
+    ]
+
     receipt = models.ForeignKey(
         Receipt,
         on_delete=models.CASCADE,
@@ -88,10 +96,24 @@ class Settlement(models.Model):
         on_delete=models.PROTECT,
         related_name="settlements_to_receive",
     )
-    share_amount = models.IntegerField(validators=[MinValueValidator(0)])
+    share_amount = models.PositiveIntegerField(validators=[MinValueValidator(0)])
     memo_code = models.CharField(max_length=20, blank=True, null=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="REQUESTED")
+    verification_method = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_METHOD_CHOICES,
+        blank=True,
+        null=True,
+    )
+    verified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="settlements_verified",
+    )
+
     requested_at = models.DateTimeField(auto_now_add=True)
     paid_self_at = models.DateTimeField(blank=True, null=True)
     confirmed_at = models.DateTimeField(blank=True, null=True)
@@ -107,10 +129,18 @@ class Settlement(models.Model):
                 condition=Q(share_amount__gte=0),
                 name="settlements_settlement_share_amount_nonnegative",
             ),
+            models.CheckConstraint(
+                condition=~Q(payer_user=models.F("payee_user")),
+                name="settlements_payer_payee_must_differ",
+            ),
         ]
 
+    @property
+    def trip(self):
+        return self.receipt.trip
+
     def __str__(self):
-        return f"Settlement {self.id}"
+        return f"Settlement {self.id} / receipt={self.receipt_id}"
 
 
 class SettlementProof(models.Model):

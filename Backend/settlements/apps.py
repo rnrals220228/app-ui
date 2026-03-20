@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 
 
-class SettlementsConfig(AppConfig):
-    name = 'settlements'
+class SettlementConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'settlement'
