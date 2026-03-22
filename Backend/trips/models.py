@@ -9,7 +9,7 @@ class Trip(models.Model):
         ("FULL", "FULL"),
         ("CANCELED", "CANCELED"),
         ("CLOSED", "CLOSED"),
-        ("COMPLETED", "COMPLETED"),
+        ("COMPLETED", "COMPLETED"   ),
     ]
 
     creator_user = models.ForeignKey(
