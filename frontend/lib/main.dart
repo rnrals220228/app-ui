@@ -21,12 +21,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 네이버 지도 SDK 초기화 (웹에서는 제외)
-  await NaverMapSdk.instance.initialize(
-    clientId: '95qc7sfzkj',
-    onAuthFailed: (error) {
-      debugPrint('인증 실패: $error');
-    },
-  );
+  if (!kIsWeb) {
+    await NaverMapSdk.instance.initialize(
+      clientId: '95qc7sfzkj',
+      onAuthFailed: (error) {
+        debugPrint('인증 실패: $error');
+      },
+    );
+  } else {
+    debugPrint('웹 환경이므로 네이버 지도 초기화를 건너뜁니다.');
+  }
 
   runApp(const TaxiMateApp());
 }

@@ -389,7 +389,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 validator: (v) {
                   if (v == null || v.isEmpty) return '비밀번호를 입력해주세요.';
                   if (v.length < 8) return '비밀번호는 8자 이상이어야 합니다.';
-                  if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(v)) return '영문과 숫자를 모두 포함해주세요.';
+                  if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)').hasMatch(v)) return '영문과 숫자만 입력해주세요.';
                   return null;
                 },
               ),

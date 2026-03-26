@@ -502,7 +502,7 @@ class _MatchingTabState extends State<MatchingTab>
           const SizedBox(height: 16),
 
           // 카카오페이 링크 입력 (필수로 하기?)
-          _label('💛 카카오페이 링크 (선택)'), const SizedBox(height: 6),
+          _label('💛 카카오페이 링크 (필수)'), const SizedBox(height: 6),
           TextField(
             controller: _kakaoCtrl,
             decoration: InputDecoration(
