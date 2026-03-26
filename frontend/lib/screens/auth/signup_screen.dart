@@ -48,7 +48,18 @@ class _SignupScreenState extends State<SignupScreen> {
       _showSnackBar('올바른 전화번호를 입력해주세요.', isError: true);
       return;
     }
+// --- API 호출 시작 ---
+  bool isSent = await AuthService.sendVerificationCode(_phoneCtrl.text);
 
+  if (isSent) {
+    setState(() { _codeSent = true; _countdown = 180; });
+    _showSnackBar('인증번호가 전송되었습니다.');
+
+    // 카운트다운 타이머 시작... (기존 코드와 동일)
+  } else {
+    _showSnackBar('번호 전송에 실패했습니다. 다시 시도해주세요.', isError: true);
+  }
+}
     setState(() { _codeSent = true; _countdown = 180; }); // 3분 카운트다운
     _showSnackBar('인증번호가 전송되었습니다. (테스트: 123456)');
 
@@ -71,13 +82,25 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   // -- 인증번호 확인 ---------------------------------------------
-  void _verifyCode() {
-    // 임시: '123456'이 정답 (실제로는 Firebase 또는 서버에서 검증)
-    if (_codeCtrl.text.trim() == '123456') {
+  // -- 인증번호 확인 (수정본) ---------------------------------------------
+  Future<void> _verifyCode() async {
+    // 1. 입력값 체크: 아무것도 입력 안 했을 때 서버 요청을 막아줍니다.
+    if (_codeCtrl.text.trim().isEmpty) {
+      _showSnackBar('인증번호를 입력해주세요.', isError: true);
+      return;
+    }
+
+    // 2. 서버 검증 요청: 비동기로 서버의 응답을 기다립니다.
+    // (AuthService 파일에 verifyCode 함수가 구현되어 있어야 합니다.)
+    bool isValid = await AuthService.verifyCode(_phoneCtrl.text, _codeCtrl.text.trim());
+
+    if (isValid) {
+      // 3. 성공 시: UI 상태를 '인증 완료'로 변경
       setState(() => _phoneVerified = true);
       _showSnackBar('본인인증이 완료되었습니다! ✅');
     } else {
-      _showSnackBar('인증번호가 올바르지 않습니다.', isError: true);
+      // 4. 실패 시: 에러 메시지 출력
+      _showSnackBar('인증번호가 올바르지 않거나 만료되었습니다.', isError: true);
     }
   }
 
@@ -95,7 +118,23 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     setState(() => _isLoading = true);
+// --- API 호출 시작 ---
+  final result = await AuthService.signup(
+    name: _nameCtrl.text.trim(),
+    gender: _selectedGender!,
+    phone: _phoneCtrl.text.trim(),
+    loginId: _idCtrl.text.trim(),
+    password: _pwCtrl.text.trim(),
+  );
 
+  setState(() => _isLoading = false);
+
+  if (result['success']) {
+    _showSuccessDialog();
+  } else {
+    _showSnackBar(result['message'], isError: true);
+  }
+}
     // TODO: 실제 서버/Firebase에 회원 정보 저장
     // await FirebaseAuth.instance.createUserWithEmailAndPassword(...)
     // await FirebaseFirestore.instance.collection('users').doc(uid).set({
