@@ -141,6 +141,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _showAttachPanel = false;
   bool _showSearch = false;
   bool _notificationOn = true;
+  bool _noticeExpanded = false;  // 고정 공지
   String _searchQuery = '';
 
   @override
@@ -151,6 +152,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     super.dispose();
   }
 
+  // 위젯 빌드
   @override
   Widget build(BuildContext context) {
     final displayMessages = _searchQuery.isEmpty
@@ -164,6 +166,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           children: [
             _buildChatHeader(),
             if (_showSearch) _buildSearchBar(),
+            _buildNoticeBar(),
             Expanded(
               child: ListView.builder(
                 controller: _scrollCtrl,
@@ -246,6 +249,63 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
           contentPadding: const EdgeInsets.symmetric(vertical: 10),
+        ),
+      ),
+    );
+  }
+
+  // 고정 공지 위젯
+  Widget _buildNoticeBar() {
+    const noticeText = '택시 번호 및 만날 위치를 꼭 공유해주세요';
+
+    return GestureDetector(
+      onTap: () => setState(() => _noticeExpanded = !_noticeExpanded),
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: AppColors.primaryLight,
+          border: Border(bottom: BorderSide(color: AppColors.border)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 항상 보이는 부분: 아이콘 + '공지' 텍스트 + 화살표
+            Row(
+              children: [
+                Container(
+                  width: 22, height: 22,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                  child: const Icon(Icons.push_pin_rounded, size: 13, color: Colors.white),
+                ),
+                const Text('공지',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                        color: AppColors.primary, letterSpacing: 0.4)),
+                const Spacer(),
+                AnimatedRotation(
+                  duration: const Duration(milliseconds: 200),
+                  turns: _noticeExpanded ? 0.5 : 0.0,
+                  child: const Icon(Icons.keyboard_arrow_down_rounded,
+                      size: 18, color: AppColors.primary),
+                ),
+              ],
+            ),
+
+            // 펼쳤을 때만 보이는 공지 내용
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: _noticeExpanded
+                  ? Padding(
+                padding: const EdgeInsets.only(top: 8, left: 30),
+                child: Text(noticeText,
+                    style: const TextStyle(fontSize: 12, color: AppColors.secondary,
+                        fontWeight: FontWeight.w500, height: 1.5)),
+              )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );

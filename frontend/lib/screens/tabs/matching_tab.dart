@@ -20,6 +20,7 @@ class _MatchingTabState extends State<MatchingTab>
   final TextEditingController _searchCtrl = TextEditingController(); // 검색창 입력 제어
   bool _searchFocused = false; // 최근 검색어 노출 여부 판단
   String _searchQuery = ''; // 현재 입력된 검색어 저장
+  String? _selectedCardId; // 카드 펼침 상태
 
   // 더미 데이터 - 최근 검색어 리스트
   List<String> _recentSearches = ['강남역', '홍대입구', '잠실역', '판교역'];
@@ -232,104 +233,127 @@ class _MatchingTabState extends State<MatchingTab>
   // 핀 목록 카드 위젯
   Widget _buildSearchCard(Map<String, dynamic> pin) {
     final isFull = (pin['cur'] as int) >= (pin['max'] as int);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row( // 상단 행 : 프로필, 대표자 정보, 출발 시간, 경로
-            children: [
-              Container( // 프로필 원형 아이콘
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.bg, shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Icon(Icons.person, color: AppColors.gray, size: 26),
-              ),
-              const SizedBox(width: 12),
-              Expanded( // 대표자 아이디, 경로 정보
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('@${pin['hostId']}',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
-                    const SizedBox(height: 6),
-                    Row( // 경로 표시 (출발지->목적지)
-                      children: [
-                        Flexible(child: Text('${pin['dept']}',
-                            style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
-                            overflow: TextOverflow.ellipsis)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          child: Text('→', style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w700)),
-                        ),
-                        Flexible(child: Text('${pin['dest']}',
-                            style: const TextStyle(fontSize: 12, color: AppColors.secondary),
-                            overflow: TextOverflow.ellipsis)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container( // 출발 시간 뱃지
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
-                child: Column(
-                  children: [
-                    const Text('출발', style: TextStyle(fontSize: 9, color: Colors.white70)),
-                    Text('${pin['time']}',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-                  ],
-                ),
-              ),
-            ],
+    final isSelected = _selectedCardId == pin['hostId'];
+
+    return GestureDetector(
+      onTap: () => setState(() =>
+      _selectedCardId = isSelected ? null : pin['hostId'] as String),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryLight : Colors.white,
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 1.5 : 1,
           ),
-          const SizedBox(height: 12),
-          Row( // 하단 행 : 인원 현황, 참여 버튼
-            children: [
-              // 인원 현황
-              ...List.generate(pin['max'] as int, (j) => Container(
-                width: 22, height: 22, margin: const EdgeInsets.only(right: 4),
-                decoration: BoxDecoration(
-                  color: j < (pin['cur'] as int) ? AppColors.primary : AppColors.bg,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: j < (pin['cur'] as int) ? AppColors.primary : AppColors.border),
-                ),
-                child: j < (pin['cur'] as int) ? const Icon(Icons.person, color: Colors.white, size: 13) : null,
-              )),
-              const SizedBox(width: 6),
-              Text('${pin['cur']}/${pin['max']}명', style: const TextStyle(fontSize: 11, color: AppColors.gray)),
-              const Spacer(),
-              SizedBox( // 참여하기 버튼 (마감된 핀은 마감 표시)
-                height: 34,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isFull ? AppColors.gray : AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.bg, shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border),
                   ),
-                  onPressed: isFull ? null : () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => RideJoinScreen(pin: pin),)
-                    );
-                  },
-                  child: Text(isFull ? '마감' : '참여하기',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  child: const Icon(Icons.person, color: AppColors.gray, size: 26),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('@${pin['hostId']}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondary)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Flexible(child: Text('${pin['dept']}',
+                              style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis)),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Text('→', style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.w700)),
+                          ),
+                          Flexible(child: Text('${pin['dest']}',
+                              style: const TextStyle(fontSize: 12, color: AppColors.secondary),
+                              overflow: TextOverflow.ellipsis)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
+                  child: Column(
+                    children: [
+                      const Text('출발', style: TextStyle(fontSize: 9, color: Colors.white70)),
+                      Text('${pin['time']}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                ...List.generate(pin['max'] as int, (j) => Container(
+                  width: 22, height: 22, margin: const EdgeInsets.only(right: 4),
+                  decoration: BoxDecoration(
+                    color: j < (pin['cur'] as int) ? AppColors.primary : AppColors.bg,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: j < (pin['cur'] as int) ? AppColors.primary : AppColors.border),
+                  ),
+                  child: j < (pin['cur'] as int) ? const Icon(Icons.person, color: Colors.white, size: 13) : null,
+                )),
+                const SizedBox(width: 6),
+                Text('${pin['cur']}/${pin['max']}명', style: const TextStyle(fontSize: 11, color: AppColors.gray)),
+              ],
+            ),
+
+            // 펼침 영역 — 참여하기 버튼
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              child: isSelected
+                  ? Column(
+                children: [
+                  const SizedBox(height: 12),
+                  const Divider(height: 1, color: AppColors.border),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isFull ? AppColors.gray : AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: isFull ? null : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => RideJoinScreen(pin: pin)),
+                        );
+                      },
+                      child: Text(isFull ? '마감' : '참여하기',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -787,56 +811,68 @@ class _RideJoinScreenState extends State<RideJoinScreen> {
             const SizedBox(height: 4),
             const Text('빈 좌석을 선택해 주세요.', style: TextStyle(fontSize: 11, color: AppColors.gray)),
             const SizedBox(height: 10),
-            _card(child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+            _card(
+              child: Padding(
+                padding: const EdgeInsets.all(12), // 여기서 전체적인 내부 여백을 조절합니다.
+                child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.bg, borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Row(children: [
-                        Icon(Icons.settings, size: 14, color: AppColors.gray),
-                        SizedBox(width: 4),
-                        Text('운전석', style: TextStyle(fontSize: 11, color: AppColors.gray)),
-                      ]),
+                    // 1행 — 운전석 / 조수석
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8), // 높이 축소
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              border: Border.all(color: AppColors.gray.withOpacity(0.2)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Column(
+                              children: [
+                                Icon(Icons.settings, size: 18, color: AppColors.gray), // 아이콘 축소
+                                SizedBox(height: 4),
+                                Text('운전석', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.gray)),
+                                Text('운전자', style: TextStyle(fontSize: 9, color: AppColors.gray)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: _seatButton('조수석', Icons.airline_seat_recline_extra)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+                    const Divider(color: AppColors.border, height: 1),
+                    const SizedBox(height: 8),
+
+                    // 2행 — 좌석들
+                    Row(
+                      children: [
+                        Expanded(child: _seatButton('왼쪽 창가', Icons.airline_seat_recline_normal)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _seatButton('가운데', Icons.airline_seat_legroom_normal)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _seatButton('오른쪽 창가', Icons.airline_seat_recline_normal)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 범례
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _legend(AppColors.primaryLight, AppColors.primary, '선택됨'),
+                        const SizedBox(width: 12),
+                        _legend(AppColors.bg, AppColors.border, '비어있음'),
+                        const SizedBox(width: 12),
+                        _legend(const Color(0xFFF5F5F5), AppColors.gray, '사용 중'),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                const Divider(color: AppColors.border, height: 1),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(child: Column(children: [
-                      _seatButton('조수석',    Icons.airline_seat_recline_extra),
-                      const SizedBox(height: 10),
-                      _seatButton('왼쪽 창가', Icons.airline_seat_recline_normal),
-                    ])),
-                    const SizedBox(width: 10),
-                    Expanded(child: Column(children: [
-                      _seatButton('가운데',      Icons.airline_seat_legroom_normal),
-                      const SizedBox(height: 10),
-                      _seatButton('오른쪽 창가', Icons.airline_seat_recline_normal),
-                    ])),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _legend(AppColors.primaryLight, AppColors.primary, '선택됨'),
-                    const SizedBox(width: 16),
-                    _legend(AppColors.bg, AppColors.border, '비어있음'),
-                    const SizedBox(width: 16),
-                    _legend(const Color(0xFFF5F5F5), AppColors.gray, '사용 중'),
-                  ],
-                ),
-              ],
-            )),
+              ),
+            ),
             const SizedBox(height: 32),
 
             // 참여하기 버튼
