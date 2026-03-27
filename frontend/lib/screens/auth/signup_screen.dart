@@ -48,37 +48,24 @@ class _SignupScreenState extends State<SignupScreen> {
       _showSnackBar('올바른 전화번호를 입력해주세요.', isError: true);
       return;
     }
-// --- API 호출 시작 ---
-  bool isSent = await AuthService.sendVerificationCode(_phoneCtrl.text);
 
-  if (isSent) {
-    setState(() { _codeSent = true; _countdown = 180; });
-    _showSnackBar('인증번호가 전송되었습니다.');
+    // --- API 호출 시작 ---
+    final result = await AuthService.sendVerificationCode(phone: _phoneCtrl.text);
 
-    // 카운트다운 타이머 시작... (기존 코드와 동일)
-  } else {
-    _showSnackBar('번호 전송에 실패했습니다. 다시 시도해주세요.', isError: true);
-  }
-}
-    setState(() { _codeSent = true; _countdown = 180; }); // 3분 카운트다운
-    _showSnackBar('인증번호가 전송되었습니다. (테스트: 123456)');
+    if (result['success'] == true) {
+      setState(() { _codeSent = true; _countdown = 180; }); // 3분 카운트다운
+      _showSnackBar('인증번호가 전송되었습니다.');
 
-    // 카운트다운 타이머
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
-      setState(() => _countdown--);
-      return _countdown > 0;
-    });
-
-    // TODO: Firebase Phone Auth 연동 시
-    // await FirebaseAuth.instance.verifyPhoneNumber(
-    //   phoneNumber: '+82${_phoneCtrl.text}',
-    //   verificationCompleted: (credential) { ... },
-    //   verificationFailed: (e) { ... },
-    //   codeSent: (verificationId, resendToken) { ... },
-    //   codeAutoRetrievalTimeout: (verificationId) { ... },
-    // );
+      // 카운트다운 타이머
+      Future.doWhile(() async {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!mounted) return false;
+        setState(() => _countdown--);
+        return _countdown > 0;
+      });
+    } else {
+      _showSnackBar('번호 전송에 실패했습니다. 다시 시도해주세요.', isError: true);
+    }
   }
 
   // -- 인증번호 확인 ---------------------------------------------
@@ -91,13 +78,12 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     // 2. 서버 검증 요청: 비동기로 서버의 응답을 기다립니다.
-    // (AuthService 파일에 verifyCode 함수가 구현되어 있어야 합니다.)
-    bool isValid = await AuthService.verifyCode(_phoneCtrl.text, _codeCtrl.text.trim());
+    final result = await AuthService.verifyCode(phone: _phoneCtrl.text, code: _codeCtrl.text.trim());
 
-    if (isValid) {
+    if (result['success'] == true) {
       // 3. 성공 시: UI 상태를 '인증 완료'로 변경
       setState(() => _phoneVerified = true);
-      _showSnackBar('본인인증이 완료되었습니다! ✅');
+      _showSnackBar('본인인증이 완료되었습니다! ');
     } else {
       // 4. 실패 시: 에러 메시지 출력
       _showSnackBar('인증번호가 올바르지 않거나 만료되었습니다.', isError: true);
@@ -118,38 +104,23 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     setState(() => _isLoading = true);
-// --- API 호출 시작 ---
-  final result = await AuthService.signup(
-    name: _nameCtrl.text.trim(),
-    gender: _selectedGender!,
-    phone: _phoneCtrl.text.trim(),
-    loginId: _idCtrl.text.trim(),
-    password: _pwCtrl.text.trim(),
-  );
 
-  setState(() => _isLoading = false);
+    // --- API 호출 시작 ---
+    final result = await AuthService.signup(
+      name: _nameCtrl.text.trim(),
+      gender: _selectedGender!,
+      phone: _phoneCtrl.text.trim(),
+      username: _idCtrl.text.trim(),
+      password: _pwCtrl.text.trim(),
+    );
 
-  if (result['success']) {
-    _showSuccessDialog();
-  } else {
-    _showSnackBar(result['message'], isError: true);
-  }
-}
-    // TODO: 실제 서버/Firebase에 회원 정보 저장
-    // await FirebaseAuth.instance.createUserWithEmailAndPassword(...)
-    // await FirebaseFirestore.instance.collection('users').doc(uid).set({
-    //   'name': _nameCtrl.text,
-    //   'gender': _selectedGender,
-    //   'phone': _phoneCtrl.text,
-    //   'id': _idCtrl.text,
-    // });
-
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    // 가입 완료 다이얼로그
-    _showSuccessDialog();
+    if (result['success']) {
+      _showSuccessDialog();
+    } else {
+      _showSnackBar(result['message'], isError: true);
+    }
   }
 
   void _showSuccessDialog() {
