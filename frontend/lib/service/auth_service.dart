@@ -56,55 +56,58 @@ class AuthService {
     };
   }
 
+ // =========================================================
+  // 1️⃣ 로그인 (이미지 명세 반영)
+  // POST /api/accounts/phonecheck/
   // =========================================================
-  // 1️⃣ 로그인
-  // POST /api/accounts/login/
-  // =========================================================
-  static Future<Map<String, dynamic>> login({
+  static Future<Map<String, dynamic>> phoneLogin({
     required String username,
     required String password,
   }) async {
+    // 1. 더미 데이터 모드
     if (useDummyData) {
-      // 더미 데이터 모드
       await Future.delayed(const Duration(seconds: 1));
       return {
         'success': true,
-        'access': 'dummy_access_token_12345',
-        'refresh': 'dummy_refresh_token_67890',
-        'user': {
-          'username': username,
-          'nickname': '테스트유저',
-        },
+        'message': '로그인에 성공했습니다.',
+        'JWT': 'dummy_jwt_token_varchart_30_limit',
       };
     }
 
-    // 실제 API 통신
-    final uri = Uri.parse('$baseUrl/accounts/login/');
-    final response = await http.post(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
-    );
+    // 2. 실제 API 통신 (이미지 명세: /accounts/phonecheck/)
+    final uri = Uri.parse('$baseUrl/accounts/phonecheck/');
 
-    final data = _handleResponse(response);
-
-    // 토큰 저장
-    if (data['access'] != null && data['refresh'] != null) {
-      await saveTokens(
-        accessToken: data['access'],
-        refreshToken: data['refresh'],
+    try {
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'username': username, // 아이디 (Varchar 30)
+          'password': password, // 비밀번호 (Varchar 128)
+        }),
       );
+
+      final data = _handleResponse(response);
+
+      // 3. 토큰 저장 (명세서의 'JWT' 필드 저장)
+      if (data['JWT'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        // 기존 코드의 'access_token' 위치에 JWT를 저장합니다.
+        await prefs.setString('access_token', data['JWT']);
+      }
+
+      return {
+        'success': true,
+        'message': data['message'], // 성공메세지
+        'JWT': data['JWT'],         // 토큰
+      };
+    } catch (e) {
+      throw Exception('로그인 실패: $e');
     }
-
-    return data;
   }
-
   // =========================================================
   // 2️⃣ 로그아웃
   // POST /api/accounts/logout/
