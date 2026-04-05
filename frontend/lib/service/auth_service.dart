@@ -56,7 +56,7 @@ class AuthService {
     };
   }
 
- // =========================================================
+  // =========================================================
   // 1️⃣ 로그인 (이미지 명세 반영)
   // POST /api/accounts/phonecheck/
   // =========================================================
@@ -64,7 +64,6 @@ class AuthService {
     required String username,
     required String password,
   }) async {
-    // 1. 더미 데이터 모드
     if (useDummyData) {
       await Future.delayed(const Duration(seconds: 1));
       return {
@@ -74,7 +73,6 @@ class AuthService {
       };
     }
 
-    // 2. 실제 API 통신 (이미지 명세: /accounts/phonecheck/)
     final uri = Uri.parse('$baseUrl/accounts/phonecheck/');
 
     try {
@@ -85,29 +83,28 @@ class AuthService {
           'Accept': 'application/json',
         },
         body: jsonEncode({
-          'username': username, // 아이디 (Varchar 30)
-          'password': password, // 비밀번호 (Varchar 128)
+          'username': username,
+          'password': password,
         }),
       );
 
       final data = _handleResponse(response);
 
-      // 3. 토큰 저장 (명세서의 'JWT' 필드 저장)
       if (data['JWT'] != null) {
         final prefs = await SharedPreferences.getInstance();
-        // 기존 코드의 'access_token' 위치에 JWT를 저장합니다.
         await prefs.setString('access_token', data['JWT']);
       }
 
       return {
         'success': true,
-        'message': data['message'], // 성공메세지
-        'JWT': data['JWT'],         // 토큰
+        'message': data['message'],
+        'JWT': data['JWT'],
       };
     } catch (e) {
       throw Exception('로그인 실패: $e');
     }
   }
+
   // =========================================================
   // 2️⃣ 로그아웃
   // POST /api/accounts/logout/
@@ -116,13 +113,11 @@ class AuthService {
     final refreshToken = await getRefreshToken();
 
     if (useDummyData) {
-      // 더미 데이터 모드
       await Future.delayed(const Duration(milliseconds: 500));
       await clearTokens();
       return {'success': true, 'message': '로그아웃되었습니다.'};
     }
 
-    // 실제 API 통신
     final uri = Uri.parse('$baseUrl/accounts/logout/');
     final headers = await getAuthHeaders();
 
@@ -135,10 +130,7 @@ class AuthService {
     );
 
     final data = _handleResponse(response);
-
-    // 토큰 삭제
     await clearTokens();
-
     return data;
   }
 
@@ -150,7 +142,6 @@ class AuthService {
     String reason = '사용자 탈퇴',
   }) async {
     if (useDummyData) {
-      // 더미 데이터 모드
       await Future.delayed(const Duration(milliseconds: 800));
       await clearTokens();
       return {
@@ -160,7 +151,6 @@ class AuthService {
       };
     }
 
-    // 실제 API 통신
     final uri = Uri.parse('$baseUrl/accounts/withdrawal/');
     final headers = await getAuthHeaders();
 
@@ -173,10 +163,7 @@ class AuthService {
     );
 
     final data = _handleResponse(response);
-
-    // 토큰 삭제
     await clearTokens();
-
     return data;
   }
 
@@ -188,7 +175,6 @@ class AuthService {
     required String profileImgUrl,
   }) async {
     if (useDummyData) {
-      // 더미 데이터 모드
       await Future.delayed(const Duration(milliseconds: 600));
       return {
         'success': true,
@@ -197,7 +183,6 @@ class AuthService {
       };
     }
 
-    // 실제 API 통신
     final uri = Uri.parse('$baseUrl/accounts/me/');
     final headers = await getAuthHeaders();
 
@@ -242,38 +227,10 @@ class AuthService {
     if (useDummyData) {
       await Future.delayed(const Duration(milliseconds: 800));
       return [
-        {
-          'event_type': 'TRIP_PARTICIPATION_COMPLETED',
-          'direction': 'GAIN',
-          'applied_delta': '+2.5',
-          'score_after': '42.0',
-          'reason_detail': '동승 완료 - 정산 완료',
-          'created_at': '2024-12-20T14:30:00',
-        },
-        {
-          'event_type': 'FAST_SETTLEMENT',
-          'direction': 'GAIN',
-          'applied_delta': '+1.0',
-          'score_after': '39.5',
-          'reason_detail': '빠른 정산 보너스',
-          'created_at': '2024-12-18T09:15:00',
-        },
-        {
-          'event_type': 'NORMAL_CANCEL',
-          'direction': 'PENALTY',
-          'applied_delta': '-1.0',
-          'score_after': '38.5',
-          'reason_detail': '출발 10분 전 취소',
-          'created_at': '2024-12-15T16:20:00',
-        },
-        {
-          'event_type': 'STREAK_BONUS',
-          'direction': 'GAIN',
-          'applied_delta': '+0.5',
-          'score_after': '39.5',
-          'reason_detail': '연속 성공 보너스',
-          'created_at': '2024-12-10T11:00:00',
-        },
+        {'event_type': 'TRIP_PARTICIPATION_COMPLETED', 'direction': 'GAIN', 'applied_delta': '+2.5', 'score_after': '42.0', 'reason_detail': '동승 완료 - 정산 완료', 'created_at': '2024-12-20T14:30:00'},
+        {'event_type': 'FAST_SETTLEMENT', 'direction': 'GAIN', 'applied_delta': '+1.0', 'score_after': '39.5', 'reason_detail': '빠른 정산 보너스', 'created_at': '2024-12-18T09:15:00'},
+        {'event_type': 'NORMAL_CANCEL', 'direction': 'PENALTY', 'applied_delta': '-1.0', 'score_after': '38.5', 'reason_detail': '출발 10분 전 취소', 'created_at': '2024-12-15T16:20:00'},
+        {'event_type': 'STREAK_BONUS', 'direction': 'GAIN', 'applied_delta': '+0.5', 'score_after': '39.5', 'reason_detail': '연속 성공 보너스', 'created_at': '2024-12-10T11:00:00'},
       ];
     }
 
@@ -339,30 +296,9 @@ class AuthService {
   }
 
   // =========================================================
-  // 공통 응답 처리 (핵심)
+  // 9️⃣ 회원가입 (수정 완료)
+  // POST /api/accounts/signup/
   // =========================================================
-  static Map<String, dynamic> _handleResponse(http.Response response) {
-    final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return data;
-    } else {
-      throw Exception(
-        data['message'] ?? data['detail'] ?? '서버 오류 (${response.statusCode})',
-      );
-    }
-  }
-
-
-
-  // =========================================================
-  // 회원가입
-  // =========================================================
- class AuthService {
-  // 실제 서버 도메인으로 수정하세요
-  static const String baseUrl = 'https://your-api-domain.com';
-  static const bool useDummyData = false; // 테스트 시 true로 변경
-
   static Future<Map<String, dynamic>> signup({
     required String username,
     required String password,
@@ -371,13 +307,11 @@ class AuthService {
     required String gender,
     required String idToken,
   }) async {
-    // 1. 테스트용 더미 데이터 로직
     if (useDummyData) {
       await Future.delayed(const Duration(seconds: 1));
       return {'success': true, 'message': '더미 데이터 회원가입 성공!'};
     }
 
-    // 2. 최신 이미지 명세 반영 (Endpoint: /accounts/signup/)
     final uri = Uri.parse('$baseUrl/accounts/signup/');
 
     try {
@@ -393,34 +327,35 @@ class AuthService {
           'nickname': nickname,
           'phone_number': phoneNumber,
           'gender': gender,
-          'ID Token': idToken, // 명세서의 빨간색 필드명 그대로 적용
+          'ID Token': idToken,
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         }),
       );
 
-      // 3. 응답 처리 호출
-      return _handleResponse(response);
-    } catch (e) {
-      return {'success': false, 'message': '연결 오류: $e'};
-    }
-  }
-
-  // 응답 처리 전문 함수
-  static Map<String, dynamic> _handleResponse(http.Response response) {
-    final Map<String, dynamic> body = jsonDecode(response.body);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // 이미지의 Response 명세인 'message' 필드를 반환
+      final data = _handleResponse(response);
       return {
         'success': true,
-        'message': body['message'] ?? '회원가입이 완료되었습니다.'
+        'message': data['message'] ?? '회원가입이 완료되었습니다.',
       };
-    } else {
-      return {
-        'success': false,
-        'message': body['message'] ?? '오류가 발생했습니다. (에러 코드: ${response.statusCode})'
-      };
+    } catch (e) {
+      return {'success': false, 'message': '오류가 발생했습니다: $e'};
     }
   }
-}
+
+  // =========================================================
+  // 공통 응답 처리 (단일화 완료)
+  // =========================================================
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    final data = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return data;
+    } else {
+      throw Exception(
+        data['message'] ?? data['detail'] ?? '서버 오류 (${response.statusCode})',
+      );
+    }
+  }
+
+} // <--- 전체 클래스를 닫는 최종 괄호
