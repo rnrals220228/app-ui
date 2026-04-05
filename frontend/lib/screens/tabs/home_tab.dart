@@ -14,6 +14,7 @@ import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/colors.dart';
 import 'matching_tab.dart';
+import 'active_tab.dart';
 import '../location_search_screen.dart';
 
 // 탭 전환 신호 역할 (인덱스 전달)
@@ -89,6 +90,9 @@ class _HomeTabState extends State<HomeTab> {
   double _mapCenterLat = 37.6108;    // 지도 중심 위도 (기본: 국민대학교)
   double _mapCenterLng = 126.9971;   // 지도 중심 경도
   bool _isMapReady = false;          // 지도 준비 완료 여부
+  bool _showActiveDetail = false;    // 이용 중 창
+
+  final _activeRideState = globalActiveRideState;
 
   final DraggableScrollableController _sheetController = DraggableScrollableController();
 
@@ -272,8 +276,30 @@ class _HomeTabState extends State<HomeTab> {
             Column(children: [
               _buildHeader(),
               Expanded(child: _buildMapWithSheet()),
+              // 이용 중 카드
+              ActiveRideButton(
+                state: _activeRideState,
+                onTap: () => setState(() => _showActiveDetail = true),
+              ),
             ]),
             if (_showNotifications) _buildNotificationOverlay(),
+            if (_showActiveDetail)
+              ActiveRideSheet(
+                state: _activeRideState,
+                onClose: () => setState(() => _showActiveDetail = false),
+                onGoToChat: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ActiveTabChatBridge(
+                        hostId: _activeRideState.activeRide.hostId,
+                        dept: _activeRideState.activeRide.dept,
+                        dest: _activeRideState.activeRide.dest,
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -374,6 +400,8 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+
+
   // ── 지도 + 드래그 시트 ──
   Widget _buildMapWithSheet() {
     return Stack(children: [
@@ -382,7 +410,7 @@ class _HomeTabState extends State<HomeTab> {
 
       // 내 위치 버튼
       Positioned(
-        bottom: _activePinId != null ? 320 : 24,
+        bottom: _activePinId != null ? 320 : 14,
         right: 16,
         child: FloatingActionButton.small(
           heroTag: 'location_btn',
