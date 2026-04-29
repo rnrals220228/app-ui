@@ -24,12 +24,33 @@
 ## 팀 소개 (Crescit)
 '자라다', '성장하다'라는 의미를 가진 팀 **Crescit**입니다.
 
-| 성명 | 역할 | 주요 담당 업무 |
-| :---: | :---: | :---: |
-| **김태림** | Project Lead / BE | 프로젝트 총괄, 백엔드 아키텍처 설계, 핵심 기능 개발 |
-| **김서현** | Frontend | 사용자 인터페이스(UI) 디자인 및 클라이언트 기능 구현 |
-| **박소윤** | Data / BE | 데이터베이스 설계 및 관리, API 설계 및 로직 구현 |
-| **한윤구** | Backend | API 설계 및 서버 사이드 로직 개발 |
+<table style="width: 100%; border-collapse: collapse;">
+  <tr style="background-color: #f2f2f2;">
+    <th>이름</th>
+    <th>역할</th>
+    <th>주요 담당 업무</th>
+  </tr>
+  <tr>
+    <td>김태림</td>
+    <td>Project Lead / Backend Engineer</td>
+    <td>프로젝트 총괄 <br> 백엔드 아키텍처 및 핵심 기능 개발</td>
+  </tr>
+  <tr>
+    <td>김서현</td>
+    <td>Backend Engineer</td>
+    <td>API 설계 및 서버 로직 구현</td>
+  </tr>
+  <tr>
+    <td>박소윤</td>
+    <td>Frontend Engineer</td>
+    <td>사용자 인터페이스 및 클라이언트 기능 개발</td>
+  </tr>
+  <tr>
+    <td>한윤구</td>
+    <td>Data & Backend Engineer</td>
+    <td>데이터베이스 설계 및 관리<br>서비스 아이디어 기획 참여</td>
+  </tr>
+</table>
 
 <br><br>
 
