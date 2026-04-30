@@ -17,15 +17,14 @@
 <br><br>
 
 ## 소개 영상
-[![Taxi Mate Demo Video](https://img.youtube.com/vi/영상아이디/0.jpg)](https://www.youtube.com/watch?v=영상아이디)
-*이미지를 클릭하면 시연 영상으로 이동합니다.*
+*이미지를 클릭하면 시연 영상으로 이동합니다.(영상 제작 예정)*
 <br><br>
 
 ## 팀 소개 (Crescit)
 '자라다', '성장하다'라는 의미를 가진 팀 **Crescit**입니다.
 
 <table style="width: 100%; border-radius:10px; box-shadow:2px 2px 8px rgba(0,0,0,0.2);">
-  <tr style="background-color: #f2f2f2;">
+  <tr>
     <th>이름</th>
     <th>역할</th>
     <th>주요 담당 업무</th>
@@ -63,7 +62,10 @@
 ## 기술 스택
 <br><br>
 
+
 ## 시스템 아키텍쳐
 <br><br>
 
+
 ## 소개 자료
+보고서, 발표 피피티 등 삽입 예정
