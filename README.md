@@ -23,7 +23,7 @@
 ## 팀 소개 (Crescit)
 '자라다', '성장하다'라는 의미를 가진 팀 **Crescit**입니다.
 
-<table style="width: 100%; border-radius:10px; box-shadow:2px 2px 8px rgba(0,0,0,0.2);">
+<table style="width:100%;">
   <tr>
     <th>이름</th>
     <th>역할</th>
